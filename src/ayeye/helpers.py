@@ -87,6 +87,17 @@ def get_all_parts_of_type(messages: list[Message], part_type: Type[T]) -> List[T
     return [p for m in messages for p in m.parts if isinstance(p, part_type)]
 
 
+def get_all_non_thinking_text(messages: list[Message]) -> str:
+    """
+    Get all non-thinking text parts from a list of messages
+    :param messages: List of messages to search through
+    :return: Concatenated string of non-thinking text parts
+    """
+    return "".join(
+        p.text for p in get_all_parts_of_type(messages, TextPart) if not p.meta or "thinking" not in p.meta.get("type")
+    )
+
+
 def get_provider_module(provider_name: str):
     """
     Get the provider module for a given provider name
