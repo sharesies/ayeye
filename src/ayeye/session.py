@@ -2,6 +2,7 @@
 A session is a container for all the information relevant for a given set of completion calls.
 """
 import asyncio
+import inspect
 from typing import Callable, Iterator, overload, AsyncGenerator
 
 from ayeye.helpers import get_all_parts_of_type
@@ -30,23 +31,6 @@ def normalise_prompt(prompt: Prompt | str, system_prompt: str | None) -> Prompt:
     else:
         return prompt
     
-def validate_sync_tools(tools: list[ToolSpec] | None) -> None:
-    """
-    Validate that none of the tools in the list are async.
-    Raises TypeError if any async tools are found.
-    """
-    if not tools:
-        return
-        
-    for tool in tools:
-        match tool:
-            case ToolSpec():
-                if asyncio.iscoroutinefunction(tool.fn):
-                    raise TypeError(f"Tool '{tool.name}' is async but was passed to a sync session")
-            case _:
-                if asyncio.iscoroutinefunction(tool):                    
-                    raise TypeError(f"Tool {tool.__name__} is async but was passed to a sync session")
-
 
 class Session:
     model: str  # Model name e.g. "gpt-4o"
@@ -90,9 +74,6 @@ class Session:
 
         # Convert any callables into ToolSpecs
         tool_specs = normalize_tool_spec_list(tools or [])
-        
-        # Ensure all tools are synchronous for regular sessions
-        validate_sync_tools(tool_specs)
 
         # Create a lookup table for the tools, useful for calling
         tools_lookup: dict[str, ToolSpec] = dict(
@@ -136,20 +117,47 @@ class Session:
             # Scan through the response looking for any tools that need to be called
             response_parts: list[ToolResponsePart] = []
 
+            # Group tool requests into sync and async
+            sync_requests = []
+            async_requests = []
+
+            
             for part in get_all_parts_of_type(response, ToolRequestPart):
                 # Check tool name is in the tools list
                 if part.name not in tools_lookup:
                     raise ValueError(
                         f"Tool {part.name} requested by model but not found in tools list"
                     )
+                
+                tool = tools_lookup[part.name]
+                if inspect.iscoroutinefunction(tool.fn):
+                    async_requests.append((part, tool))
+                else:
+                    sync_requests.append((part, tool))
 
-                # We've got a new tool request, call the tool and get the result
-                tool_result = tools_lookup[part.name].fn(**part.arguments)
-
-                # Collect the result into the response parts so we can put them in a message
+            # Handle synchronous tools
+            for part, tool in sync_requests:
+                tool_result = tool.fn(**part.arguments)
                 response_parts.append(
                     ToolResponsePart(id=part.id, name=part.name, result=tool_result)
                 )
+
+            # Handle async tools if any exist
+            if async_requests:
+                import asyncio
+                
+                async def run_async_tools():
+                    tasks = [
+                        tool.fn(**part.arguments)
+                        for part, tool in async_requests
+                    ]
+                    results = await asyncio.gather(*tasks)
+                    for (part, _), result in zip(async_requests, results):
+                        response_parts.append(
+                            ToolResponsePart(id=part.id, name=part.name, result=result)
+                        )
+
+                asyncio.run(run_async_tools())
 
             # Got any tool responses to add to the prompt? create a message from the tool
             if response_parts:

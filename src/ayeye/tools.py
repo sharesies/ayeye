@@ -78,7 +78,7 @@ def tool_spec_from_function(fn: callable) -> ToolSpec:
     return ToolSpec(
         name=fn.__name__,
         fn=fn,
-        prompt=fn.__doc__.strip(),
+        prompt=fn.__doc__.strip() if fn.__doc__ else "",
         arguments=arguments,
     )
 
