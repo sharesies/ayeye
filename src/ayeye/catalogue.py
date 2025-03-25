@@ -69,6 +69,15 @@ models = [
         context_window=2_097_152,
         max_output_tokens=1048576,
     ),
+    Item(
+        provider="google",
+        id="gemini-2.5-pro-exp-03-25",
+        streamable=True,
+        reasoning_effort=False,
+        function_calling=True,
+        context_window=2_097_152,
+        max_output_tokens=1048576,
+    ),
     # OpenAI
     Item(
         provider="openai",
