@@ -22,7 +22,7 @@ from ayeye.types import (
 
 ROLE_MAP = {
     Role.USER: "user",
-    Role.ASSISTANT: "assistant",
+    Role.ASSISTANT: "model",
     Role.TOOL: "tool",
 }
 
@@ -81,6 +81,9 @@ def accumulate_chunks(
                             rp.function_call.args[key] = (
                                 rp.function_call.args.get(key, "") + value
                             )
+                    elif rp.text and dp.function_call:
+                        # Just had a function call turn up with no additional text
+                        rp.function_call = dp.function_call
                     else:
                         raise ValueError(f"Unknown part types to merge: {rp} and {dp}")
                 elif dp:

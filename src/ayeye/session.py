@@ -35,7 +35,7 @@ def normalise_prompt(prompt: Prompt | str, system_prompt: str | None) -> Prompt:
 class Session:
     model: str  # Model name e.g. "gpt-4o"
     provider: ProviderBase
-    max_tool_calls = 10
+    max_tool_calls = 50
 
     def __init__(self, model: str, provider: ProviderBase):
         """
