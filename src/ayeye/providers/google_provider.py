@@ -299,7 +299,8 @@ class Provider(ProviderBase):
             config=genai_types.GenerateContentConfig(**config_parameters),
         ):
             accumulated_result = accumulate_chunks(accumulated_result, chunk)
-            yield decode_response(accumulated_result)
+            if accumulated_result.candidates:  # There are weird cases where Google returns no candidates. It's odd
+                yield decode_response(accumulated_result)
 
 
 class AsyncProvider(AsyncProviderBase):
