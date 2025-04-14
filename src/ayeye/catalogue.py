@@ -81,6 +81,33 @@ models = [
     # OpenAI
     Item(
         provider="openai",
+        id="gpt-4.1",
+        streamable=True,
+        reasoning_effort=False,
+        function_calling=True,
+        context_window=1_000_000,
+        max_output_tokens=16_384,
+    ),
+    Item(
+        provider="openai",
+        id="gpt-4.1-mini",
+        streamable=True,
+        reasoning_effort=False,
+        function_calling=True,
+        context_window=1_000_000,
+        max_output_tokens=16_384,
+    ),
+    Item(
+        provider="openai",
+        id="gpt-4.1-nano",
+        streamable=True,
+        reasoning_effort=False,
+        function_calling=True,
+        context_window=1_000_000,
+        max_output_tokens=16_384,
+    ),
+    Item(
+        provider="openai",
         id="gpt-4o",
         streamable=True,
         reasoning_effort=False,
