@@ -243,7 +243,7 @@ class Provider(ProviderBase):
     client: genai.Client
 
     def __init__(self, api_key: str, base_url: str | None = None):
-        self.client = genai.Client(api_key=api_key)
+        self.client = genai.Client(api_key=api_key, http_options=genai_types.HttpOptions(timeout=30_000))
 
     def complete(
         self,
